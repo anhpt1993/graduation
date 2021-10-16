@@ -3,6 +3,12 @@ from tkinter import messagebox as msg
 from math import *
 import matplotlib.pyplot as plt
 import numpy as np
+import threading
+
+import matplotlib
+matplotlib.use('TkAgg')
+from matplotlib.backends.backend_tkagg import FigureCanvasTkAgg
+from matplotlib.figure import Figure
 
 def check_input():
     try:
@@ -16,16 +22,43 @@ def check_input():
     except ValueError:
         msg.showwarning("CẢNH BÁO","Kiểm tra lại dữ liệu đầu vào")
 
-def run_program():
+
+
+def test_matpilot():
+    f = Figure(figsize=(5, 4), dpi=100)
+    a = f.add_subplot(111)
+    t = np.arange(0.0, 3.0, 0.01)
+    s = np.sin(2 * pi * t)
+
+    a.plot(t, s)
+    a.set_title('Tk embedding')
+    a.set_xlabel('X axis label')
+    a.set_ylabel('Y label')
+
+    win2 = Toplevel()
+    # a tk.DrawingArea
+    canvas = FigureCanvasTkAgg(f, master=win2)
+    canvas.draw()
+    canvas.get_tk_widget().pack(side="top", fill="both", expand=1)
+
+    canvas._tkcanvas.pack(side="top", fill="both", expand=1)
+
+    button = Button(master=win2, text='Quit', command=sys.exit)
+    button.pack(side="bottom")
+
+
+def show_result():
+    # draw_graph()
+    test_matpilot()
     a, b, c = check_input()
     delta = b**2 - 4 * a * c
-    
+
     title_result.config(text = "+) Kết quả: ")
     # xoá các thông báo đã tồn tại trước đó
     announce1.config(text="")
     announce2.config(text="")
     announce3.config(text="")
-    
+
     if delta < 0:
         announce1.config(text = "Phương trình vô nghiệm!!!")
         window.geometry("400x320")
@@ -38,7 +71,6 @@ def run_program():
         announce2.config(text=f"x1 = {(-b-sqrt(delta))/2/a:.2f}")
         announce3.config(text=f"x2 = {(-b+sqrt(delta))/2/a:.2f}")
         window.geometry("400x380")
-    draw_graph()
 
 def cal_y(x):
     a, b, c = check_input()
@@ -46,6 +78,13 @@ def cal_y(x):
 
 def draw_graph():
     a, b, c = check_input()
+    thread1 = threading.Thread(target=draw_graph_in_matpilot, args=(a, b, c))
+    thread1.setDaemon(True)
+    thread1.start()
+
+import time
+def draw_graph_in_matpilot(a, b, c):
+    time.sleep(2)
     delta = b ** 2 - 4 * a * c
 
     # xác định toạ độ đỉnh
@@ -97,7 +136,6 @@ def draw_graph():
 
     plt.show()
 
-
 window = Tk()
 window.geometry("400x250")
 window.title("Basic Mathematics")
@@ -145,7 +183,8 @@ entry_c.place(x = 330, y = 110)
 # tạo nút bấm thực thi
 btn_photo = PhotoImage(file = "arrow-down.png")
 Label(window, image = btn_photo).place(x = 168, y = 150)
-btn_execute = Button(window, text = "SOLVING!!!", command = run_program)
+btn_execute = Button(window, text = "SOLVING!!!", command=show_result)
+
 btn_execute.place(x = 165, y = 220)
 
 # tạo nhãn kết quả
