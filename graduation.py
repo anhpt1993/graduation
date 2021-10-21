@@ -1,14 +1,11 @@
 from tkinter import *
 from tkinter import messagebox as msg
 from math import *
-import matplotlib.pyplot as plt
 import numpy as np
-import threading
-
 import matplotlib
-matplotlib.use('TkAgg')
 from matplotlib.backends.backend_tkagg import FigureCanvasTkAgg
 from matplotlib.figure import Figure
+matplotlib.use('TkAgg')
 
 def check_input():
     try:
@@ -22,35 +19,9 @@ def check_input():
     except ValueError:
         msg.showwarning("CẢNH BÁO","Kiểm tra lại dữ liệu đầu vào")
 
-
-
-def test_matpilot():
-    f = Figure(figsize=(5, 4), dpi=100)
-    a = f.add_subplot(111)
-    t = np.arange(0.0, 3.0, 0.01)
-    s = np.sin(2 * pi * t)
-
-    a.plot(t, s)
-    a.set_title('Tk embedding')
-    a.set_xlabel('X axis label')
-    a.set_ylabel('Y label')
-
-    win2 = Toplevel()
-    # a tk.DrawingArea
-    canvas = FigureCanvasTkAgg(f, master=win2)
-    canvas.draw()
-    canvas.get_tk_widget().pack(side="top", fill="both", expand=1)
-
-    canvas._tkcanvas.pack(side="top", fill="both", expand=1)
-
-    button = Button(master=win2, text='Quit', command=sys.exit)
-    button.pack(side="bottom")
-
-
 def show_result():
-    # draw_graph()
-    test_matpilot()
     a, b, c = check_input()
+    draw_graph(a, b, c)
     delta = b**2 - 4 * a * c
 
     title_result.config(text = "+) Kết quả: ")
@@ -76,16 +47,14 @@ def cal_y(x):
     a, b, c = check_input()
     return a * (x ** 2) + b * x + c
 
-def draw_graph():
-    a, b, c = check_input()
-    thread1 = threading.Thread(target=draw_graph_in_matpilot, args=(a, b, c))
-    thread1.setDaemon(True)
-    thread1.start()
-
-import time
-def draw_graph_in_matpilot(a, b, c):
-    time.sleep(2)
+def draw_graph(a, b, c):
     delta = b ** 2 - 4 * a * c
+    f = Figure(dpi=150)
+    graph = f.add_subplot(111)
+
+    graph.set_title("Graph", fontdict={"fontname": "calibri", "fontsize": 20})
+    graph.set_xlabel("X Axis", fontdict={"fontname": "Comic Sans MS"})
+    graph.set_ylabel("Y Axis", fontdict={"fontname": "Comic Sans MS"})
 
     # xác định toạ độ đỉnh
     x0 = -b / (2 * a)
@@ -100,41 +69,37 @@ def draw_graph_in_matpilot(a, b, c):
     if delta <= 0:
         x = np.arange(x0 - 5, x0 + 5.5, 0.5)
     else:
-        x = np.arange(round(min_x - avg_x), round(max_x + avg_x), 0.1)
+        x = np.arange((min_x - avg_x), (max_x + avg_x), 0.05)
     y = []
     for i in x:
         y.append(cal_y(i))
-
-    # phóng to, thu nhỏ đồ thị
-    plt.figure(dpi = 150)
 
     # vẽ đồ thị y = 0
     if delta <= 0:
         x_ref = [x0 - 5, x0 + 5]
     else:
-        x_ref = [round(min_x - avg_x), round(max_x + avg_x)]
+        x_ref = [(min_x - avg_x), (max_x + avg_x)]
     y_ref = [0, 0]
 
-    plt.plot(x_ref, y_ref, "r--", label="y = 0")
+    graph.plot(x_ref, y_ref, "r--", label="y = 0")
 
     # vẽ đồ thị y =  ax^2 + bx + c
-    plt.plot(x, y, "b-", label=f"y = {a}x^2 + {b}x + {c}")
-
-    plt.title("Graph", fontdict={"fontname": "calibri", "fontsize": 20})
-    plt.xlabel("X Axis", fontdict={"fontname": "Comic Sans MS"})
-    plt.ylabel("Y Axis", fontdict={"fontname": "Comic Sans MS"})
+    graph.plot(x, y, "b-", label=f"y = {a}x^2 + {b}x + {c}")
 
     if delta <= 0:
         x_tick = [round(x[0]), x0, round(x[len(x) - 1])]
     else:
-        x_tick = [round(min_x - avg_x), round(min_x), round(min_x + avg_x), round(max_x), round(max_x + avg_x)]
+        x_tick = [(min_x - avg_x), (min_x), (min_x + avg_x), (max_x), (max_x + avg_x)]
 
-    plt.xticks(x_tick)
+    graph.set_xticks(x_tick)
     # plt.yticks([-10, -8, -6, -4, -2, 0, 2, 4, 6, 8, 10])
 
-    plt.legend()
+    win2 = Toplevel()
+    canvas = FigureCanvasTkAgg(f, master = win2)
+    canvas.draw()
+    canvas.get_tk_widget().pack(side="top", fill = "both", expand = True)
 
-    plt.show()
+    canvas._tkcanvas.pack(side="top", fill = "both", expand = True)
 
 window = Tk()
 window.geometry("400x250")
